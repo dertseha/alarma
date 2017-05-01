@@ -112,7 +112,8 @@ func (task *Task) allAudioFiles(path string) []string {
 
 		for _, entry := range files {
 			fullPath := filepath.Join(path, entry.Name())
-			if entry.IsDir() {
+			resolvedEntry, _ := os.Stat(fullPath)
+			if resolvedEntry.IsDir() {
 				result = append(result, task.allAudioFiles(fullPath)...)
 			} else if task.isAudioFile(filepath.Ext(entry.Name())) {
 				result = append(result, fullPath)
