@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/docopt/docopt-go"
 
 	"github.com/dertseha/alarma/config"
 	"github.com/dertseha/alarma/core"
+	"github.com/dertseha/alarma/ui"
 )
 
 const (
@@ -46,21 +46,45 @@ func main() {
 	}
 }
 
+func startTicker(deferrer chan<- func(), update func(time.Time)) func() {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	postUpdate := func(now time.Time) {
+		deferrer <- func() { update(now) }
+	}
+
+	deferrer <- func() {
+		go func() {
+			for now := range ticker.C {
+				postUpdate(now)
+			}
+		}()
+	}
+
+	return ticker.Stop
+}
+
 func cmdRun(configFilename string) {
 	var configuration config.Instance
 	runner := core.NewRunner()
-
-	for true {
+	appWindow := ui.NewApplicationWindow(func(newConfiguration config.Instance) {
+		config.ToFile(configFilename, newConfiguration)
+	})
+	deferrer := make(chan func(), 100)
+	tickerStopper := startTicker(deferrer, func(now time.Time) {
 		newConfiguration, err := config.FromFile(configFilename)
 
 		if err == nil {
 			configuration = newConfiguration
-		} else {
-			fmt.Printf("\r failed config: %v", err)
 		}
 		runner.Update(configuration)
-		time.Sleep(time.Millisecond * 100)
-	}
+		appWindow.Update(now, configuration)
+	})
+	defer func() {
+		tickerStopper()
+		close(deferrer)
+	}()
+
+	appWindow.Show(deferrer)
 }
 
 func cmdSampleConfig(configFilename string) {
