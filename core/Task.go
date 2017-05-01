@@ -65,7 +65,7 @@ func (task *Task) updatePlay() {
 		if len(audioFile) > 0 {
 			//fmt.Printf("[%v] PLAY: <%v>\n", task.id, audioFile)
 			ctx, cancel := context.WithCancel(context.Background())
-			task.playCommand = exec.CommandContext(ctx, "play", audioFile)
+			task.playCommand = exec.CommandContext(ctx, "play", "-q", audioFile)
 			task.playCancel = cancel
 			task.startPlay()
 		}
