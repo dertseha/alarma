@@ -43,6 +43,8 @@ func (appWindow *ApplicationWindow) Show(deferrer <-chan func()) {
 }
 
 func (appWindow *ApplicationWindow) initInterface(app *jellui.StandardApplication, rootArea *area.Area) {
+	app.SetFullScreen(true)
+	app.SetCursorVisible(false)
 	appWindow.onGlobalActiveChanged(false)
 
 	{
@@ -65,10 +67,10 @@ func (appWindow *ApplicationWindow) initInterface(app *jellui.StandardApplicatio
 		windowHorizontalCenter := area.NewRelativeAnchor(rootArea.Left(), rootArea.Right(), 0.5)
 		windowVerticalCenter := area.NewRelativeAnchor(rootArea.Top(), rootArea.Bottom(), 0.5)
 
-		windowBuilder.SetLeft(area.NewOffsetAnchor(windowHorizontalCenter, -200.0))
-		windowBuilder.SetRight(area.NewOffsetAnchor(windowHorizontalCenter, 200.0))
-		windowBuilder.SetTop(area.NewOffsetAnchor(windowVerticalCenter, -50.0))
-		windowBuilder.SetBottom(area.NewOffsetAnchor(windowVerticalCenter, 50.0))
+		windowBuilder.SetLeft(area.NewOffsetAnchor(windowHorizontalCenter, -250.0))
+		windowBuilder.SetRight(area.NewOffsetAnchor(windowHorizontalCenter, 250.0))
+		windowBuilder.SetTop(area.NewOffsetAnchor(windowVerticalCenter, -70.0))
+		windowBuilder.SetBottom(area.NewOffsetAnchor(windowVerticalCenter, 70.0))
 
 		appWindow.timeWindow = windowBuilder.Build()
 	}
@@ -80,7 +82,7 @@ func (appWindow *ApplicationWindow) initInterface(app *jellui.StandardApplicatio
 		labelBuilder.SetTop(area.NewOffsetAnchor(appWindow.timeWindow.Top(), 0))
 		labelBuilder.SetBottom(area.NewOffsetAnchor(appWindow.timeWindow.Bottom(), 0))
 		labelBuilder.WithTextPainter(appWindow.timeFontPainter)
-		labelBuilder.SetScale(5.0)
+		labelBuilder.SetScale(8.0)
 		appWindow.timeLabel = labelBuilder.Build()
 	}
 }
