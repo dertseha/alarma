@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-// Task is one currently active action
+// Task is one currently active action.
 type Task struct {
 	id string
 

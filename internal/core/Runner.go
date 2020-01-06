@@ -36,7 +36,7 @@ func (runner *Runner) Update(configuration config.Instance) {
 		}
 	}
 
-	tasksToStop := []string{}
+	var tasksToStop []string
 	for id := range runner.activeTasks {
 		if _, isCurrent := currentTasks[id]; !isCurrent {
 			tasksToStop = append(tasksToStop, id)
