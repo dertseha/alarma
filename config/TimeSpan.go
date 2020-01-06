@@ -1,9 +1,5 @@
 package config
 
-import (
-//	"time"
-)
-
 // TimeSpan describes one action.
 type TimeSpan struct {
 	// ID uniquely identifies the time span.
@@ -19,12 +15,3 @@ type TimeSpan struct {
 	// Path points to the base directory within which audio files are to be searched.
 	Path string `json:"path"`
 }
-
-// FromTime returns the
-/*
-func (span TimeSpan) FromTime() time.Time {
-	loc, _ := time.LoadLocation("Europe/Vienna")
-	t, _ := time.ParseInLocation("HH:MM", span.From, loc)
-	return t
-}
-*/

@@ -36,7 +36,11 @@ Options:
 }
 
 func main() {
-	arguments, _ := docopt.Parse(usage(), nil, true, Title, false)
+	parser := docopt.Parser{
+		OptionsFirst:  true,
+		SkipHelpFlags: false,
+	}
+	arguments, _ := parser.ParseArgs(usage(), nil, Title)
 	configFilename := arguments["--config"].(string)
 
 	if arguments["sampleconfig"].(bool) {
@@ -67,7 +71,7 @@ func cmdRun(configFilename string) {
 	var configuration config.Instance
 	runner := core.NewRunner()
 	appWindow := ui.NewApplicationWindow(func(newConfiguration config.Instance) {
-		config.ToFile(configFilename, newConfiguration)
+		_ = config.ToFile(configFilename, newConfiguration)
 	})
 	deferrer := make(chan func(), 100)
 	tickerStopper := startTicker(deferrer, func(now time.Time) {
@@ -91,11 +95,14 @@ func cmdSampleConfig(configFilename string) {
 	var configuration config.Instance
 
 	configuration.TimeSpansActive = true
-	configuration.TimeSpans = []config.TimeSpan{config.TimeSpan{
-		ID:      "sample-entry",
-		Enabled: true,
-		From:    "08:00",
-		To:      "08:30",
-		Path:    "."}}
-	config.ToFile(configFilename, configuration)
+	configuration.TimeSpans = []config.TimeSpan{
+		{
+			ID:      "sample-entry",
+			Enabled: true,
+			From:    "08:00",
+			To:      "08:30",
+			Path:    ".",
+		},
+	}
+	_ = config.ToFile(configFilename, configuration)
 }

@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	//"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -24,21 +23,17 @@ type Task struct {
 
 // NewTask creates a new task.
 func NewTask(id string) *Task {
-	//fmt.Printf("[%v] NEW\n", id)
 	return &Task{id: id}
 }
 
 // Stop aborts all current actions of this task.
 func (task *Task) Stop() {
-	//fmt.Printf("[%v] STOP\n", task.id)
 	task.stopPlay()
 }
 
 // Update keeps the actions of this task running.
 func (task *Task) Update(path string) {
 	if task.path != path {
-		//fmt.Printf("[%v] UPDATE: <%v>\n", task.id, path)
-
 		task.stopPlay()
 		task.path = path
 	}
@@ -52,7 +47,6 @@ func (task *Task) stopPlay() {
 	defer task.playMutex.Unlock()
 
 	if task.playCancel != nil {
-		//fmt.Printf("[%v] CANCEL\n", task.id)
 		task.playCancel()
 		task.playCommand = nil
 		task.playCancel = nil
@@ -63,7 +57,6 @@ func (task *Task) updatePlay() {
 	if task.playCommand == nil {
 		audioFile := task.nextAudioFile()
 		if len(audioFile) > 0 {
-			//fmt.Printf("[%v] PLAY: <%v>\n", task.id, audioFile)
 			ctx, cancel := context.WithCancel(context.Background())
 			task.playCommand = exec.CommandContext(ctx, "play", "-q", audioFile)
 			task.playCancel = cancel
@@ -75,7 +68,7 @@ func (task *Task) updatePlay() {
 func (task *Task) startPlay() {
 	cmd := task.playCommand
 	go func() {
-		cmd.Run()
+		_ = cmd.Run()
 		task.onPlayStopped(cmd)
 	}()
 }
@@ -103,21 +96,24 @@ func (task *Task) nextAudioFile() (result string) {
 }
 
 func (task *Task) allAudioFiles(path string) []string {
-	result := []string{}
-	file, _ := os.Open(path)
+	file, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	defer func() { _ = file.Close() }()
+	files, err := file.Readdir(0)
+	if err != nil {
+		return nil
+	}
 
-	if file != nil {
-		defer file.Close()
-		files, _ := file.Readdir(0)
-
-		for _, entry := range files {
-			fullPath := filepath.Join(path, entry.Name())
-			resolvedEntry, _ := os.Stat(fullPath)
-			if resolvedEntry.IsDir() {
-				result = append(result, task.allAudioFiles(fullPath)...)
-			} else if task.isAudioFile(filepath.Ext(entry.Name())) {
-				result = append(result, fullPath)
-			}
+	var result []string
+	for _, entry := range files {
+		fullPath := filepath.Join(path, entry.Name())
+		resolvedEntry, _ := os.Stat(fullPath)
+		if resolvedEntry.IsDir() {
+			result = append(result, task.allAudioFiles(fullPath)...)
+		} else if task.isAudioFile(filepath.Ext(entry.Name())) {
+			result = append(result, fullPath)
 		}
 	}
 

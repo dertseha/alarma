@@ -1,6 +1,7 @@
 package core
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/dertseha/alarma/config"
@@ -13,8 +14,11 @@ type Runner struct {
 
 // NewRunner starts a new runner instance
 func NewRunner() *Runner {
+	rand.Seed(time.Now().UnixNano())
+
 	runner := &Runner{
-		activeTasks: make(map[string]*Task)}
+		activeTasks: make(map[string]*Task),
+	}
 
 	return runner
 }
