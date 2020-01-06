@@ -5,9 +5,9 @@ import (
 
 	"github.com/docopt/docopt-go"
 
-	"github.com/dertseha/alarma/config"
-	"github.com/dertseha/alarma/core"
-	"github.com/dertseha/alarma/ui"
+	"github.com/dertseha/alarma/internal/config"
+	"github.com/dertseha/alarma/internal/core"
+	"github.com/dertseha/alarma/internal/ui"
 )
 
 const (

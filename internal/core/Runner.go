@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/dertseha/alarma/config"
+	"github.com/dertseha/alarma/internal/config"
 )
 
 // Runner is the main logic of the alarma application.

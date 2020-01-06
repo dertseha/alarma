@@ -11,7 +11,7 @@ import (
 	"github.com/dertseha/jellui/font"
 	"github.com/dertseha/jellui/graphics"
 
-	"github.com/dertseha/alarma/config"
+	"github.com/dertseha/alarma/internal/config"
 )
 
 // ApplicationWindow is the main window.
