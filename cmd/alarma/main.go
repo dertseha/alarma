@@ -92,17 +92,6 @@ func cmdRun(configFilename string) {
 }
 
 func cmdSampleConfig(configFilename string) {
-	var configuration config.Instance
-
-	configuration.TimeSpansActive = true
-	configuration.TimeSpans = []config.TimeSpan{
-		{
-			ID:      "sample-entry",
-			Enabled: true,
-			From:    "08:00",
-			To:      "08:30",
-			Path:    ".",
-		},
-	}
+	configuration := config.Example()
 	_ = config.ToFile(configFilename, configuration)
 }

@@ -24,3 +24,19 @@ func FromBytes(data []byte) (inst Instance, err error) {
 func (inst Instance) ToBytes() ([]byte, error) {
 	return json.MarshalIndent(&inst, "", "  ")
 }
+
+// Example returns a simple filled-out configuration instance.
+func Example() Instance {
+	return Instance{
+		TimeSpansActive: true,
+		TimeSpans: []TimeSpan{
+			{
+				ID:      "sample-entry",
+				Enabled: true,
+				From:    "08:00",
+				To:      "08:30",
+				Path:    ".",
+			},
+		},
+	}
+}
