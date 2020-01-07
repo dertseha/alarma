@@ -1,99 +1,54 @@
 package ui
 
 import (
+	"image"
+	"image/color"
+	"log"
 	"time"
 
-	"github.com/dertseha/jellui"
-	"github.com/dertseha/jellui/area"
-	"github.com/dertseha/jellui/area/events"
-	"github.com/dertseha/jellui/controls"
-	"github.com/dertseha/jellui/env/native"
-	"github.com/dertseha/jellui/font"
-	"github.com/dertseha/jellui/graphics"
+	"gioui.org/app"
+	"gioui.org/f32"
+	"gioui.org/font/gofont"
+	"gioui.org/io/system"
+	"gioui.org/layout"
+	"gioui.org/op/paint"
+	"gioui.org/unit"
+	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/dertseha/alarma/internal/config"
 )
 
 // ApplicationWindow is the main window.
 type ApplicationWindow struct {
-	app *jellui.StandardApplication
-
-	activeToggle *area.Area
-	timeWindow   *area.Area
-	timeLabel    *controls.Label
-
-	timeFontPainter graphics.TextPainter
-
 	configUpdater func(config.Instance)
 	configuration config.Instance
+
+	window *app.Window
 }
 
 // NewApplicationWindow returns a new instance.
 func NewApplicationWindow(configUpdater func(config.Instance)) *ApplicationWindow {
 	return &ApplicationWindow{
-		timeFontPainter: graphics.NewBitmapTextPainter(font.ColorHeadingShock, 0x00),
-		configUpdater:   configUpdater}
+		configUpdater: configUpdater,
+	}
 }
 
 // Show opens and runs the actual window.
-func (appWindow *ApplicationWindow) Show(deferrer <-chan func()) {
-	appWindow.app = jellui.NewStandardApplication(appWindow.initInterface)
-
-	native.Run(appWindow.app, "Alarma", 15.0, deferrer)
-}
-
-func (appWindow *ApplicationWindow) initInterface(app *jellui.StandardApplication, rootArea *area.Area) {
-	app.SetFullScreen(true)
-	app.SetCursorVisible(false)
-	appWindow.onGlobalActiveChanged(false)
-
-	{
-		activeToggleBuilder := area.NewAreaBuilder()
-		activeToggleBuilder.SetParent(rootArea)
-		activeToggleBuilder.SetLeft(area.NewOffsetAnchor(rootArea.Left(), 0))
-		activeToggleBuilder.SetTop(area.NewOffsetAnchor(rootArea.Top(), 0))
-		activeToggleBuilder.SetRight(area.NewOffsetAnchor(rootArea.Right(), 0))
-		activeToggleBuilder.SetBottom(area.NewOffsetAnchor(rootArea.Bottom(), 0))
-		activeToggleBuilder.OnEvent(events.MouseButtonUpEventType, func(area *area.Area, event events.Event) bool {
-			appWindow.toggleGlobalActive()
-			return true
-		})
-		appWindow.activeToggle = activeToggleBuilder.Build()
-	}
-	{
-		windowBuilder := area.NewAreaBuilder()
-		windowBuilder.SetParent(rootArea)
-
-		windowHorizontalCenter := area.NewRelativeAnchor(rootArea.Left(), rootArea.Right(), 0.5)
-		windowVerticalCenter := area.NewRelativeAnchor(rootArea.Top(), rootArea.Bottom(), 0.5)
-
-		windowBuilder.SetLeft(area.NewOffsetAnchor(windowHorizontalCenter, -250.0))
-		windowBuilder.SetRight(area.NewOffsetAnchor(windowHorizontalCenter, 250.0))
-		windowBuilder.SetTop(area.NewOffsetAnchor(windowVerticalCenter, -70.0))
-		windowBuilder.SetBottom(area.NewOffsetAnchor(windowVerticalCenter, 70.0))
-
-		appWindow.timeWindow = windowBuilder.Build()
-	}
-	{
-		labelBuilder := app.ForLabel()
-		labelBuilder.SetParent(appWindow.timeWindow)
-		labelBuilder.SetLeft(area.NewOffsetAnchor(appWindow.timeWindow.Left(), 0))
-		labelBuilder.SetRight(area.NewOffsetAnchor(appWindow.timeWindow.Right(), 0))
-		labelBuilder.SetTop(area.NewOffsetAnchor(appWindow.timeWindow.Top(), 0))
-		labelBuilder.SetBottom(area.NewOffsetAnchor(appWindow.timeWindow.Bottom(), 0))
-		labelBuilder.WithTextPainter(appWindow.timeFontPainter)
-		labelBuilder.SetScale(8.0)
-		appWindow.timeLabel = labelBuilder.Build()
-	}
+func (appWindow *ApplicationWindow) Show() {
+	go func() {
+		appWindow.window = app.NewWindow(app.Size(unit.Px(800), unit.Px(450)), app.Title("alarma"))
+		if err := appWindow.loop(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	app.Main()
 }
 
 // Update sets the UI to the provided state.
 func (appWindow *ApplicationWindow) Update(now time.Time, configuration config.Instance) {
-	if appWindow.configuration.TimeSpansActive != configuration.TimeSpansActive {
-		appWindow.onGlobalActiveChanged(configuration.TimeSpansActive)
-	}
 	appWindow.configuration = configuration
-	appWindow.timeLabel.SetText(now.Format("15:04"))
+	appWindow.window.Invalidate()
 }
 
 func (appWindow *ApplicationWindow) toggleGlobalActive() {
@@ -102,32 +57,50 @@ func (appWindow *ApplicationWindow) toggleGlobalActive() {
 	appWindow.configUpdater(newConfiguration)
 }
 
-func (appWindow *ApplicationWindow) onGlobalActiveChanged(active bool) {
-	var uiTextPalette map[int][4]byte
+func (appWindow *ApplicationWindow) loop() error {
+	gofont.Register()
+	th := material.NewTheme()
+	gtx := layout.NewContext(appWindow.window.Queue())
+	button := new(widget.Button)
+	for {
+		e := <-appWindow.window.Events()
+		switch e := e.(type) {
+		case system.DestroyEvent:
+			return e.Err
+		case system.FrameEvent:
+			gtx.Reset(e.Config, e.Size)
+			fill(gtx, color.RGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xFF})
 
-	if active {
-		uiTextPalette = map[int][4]byte{
-			0: {0x00, 0x00, 0x00, 0x00},
-			1: {0x80, 0x94, 0x54, 0xFF},
-			2: {0x00, 0x00, 0x00, 0xC0},
+			globalActive := appWindow.configuration.TimeSpansActive
+			for button.Clicked(gtx) {
+				globalActive = !globalActive
+			}
+			if globalActive != appWindow.configuration.TimeSpansActive {
+				appWindow.toggleGlobalActive()
+			}
 
-			90: {0x80, 0x54, 0x94, 0xFF},
-			92: {0x70, 0x44, 0x84, 0xFF},
-			94: {0x60, 0x34, 0x74, 0xFF},
-			95: {0x50, 0x24, 0x64, 0xFF},
-			98: {0x40, 0x14, 0x54, 0x20}}
-	} else {
-		uiTextPalette = map[int][4]byte{
-			0: {0x00, 0x00, 0x00, 0x00},
-			1: {0x80, 0x94, 0x54, 0xFF},
-			2: {0x00, 0x00, 0x00, 0xC0},
+			themeButton := th.Button(time.Now().Format("15:04"))
+			themeButton.Font.Size = unit.Dp(100)
+			themeButton.Background = color.RGBA{}
+			if appWindow.configuration.TimeSpansActive {
+				themeButton.Color = color.RGBA{R: 0x40, G: 0x14, B: 0x54, A: 0xFF}
+			} else {
+				themeButton.Color = color.RGBA{R: 0x40, G: 0x54, B: 0x14, A: 0xFF}
+			}
+			themeButton.Layout(gtx, button)
 
-			90: {0x80, 0x94, 0x54, 0xFF},
-			92: {0x70, 0x84, 0x44, 0xFF},
-			94: {0x60, 0x74, 0x34, 0xFF},
-			95: {0x50, 0x64, 0x24, 0xFF},
-			98: {0x40, 0x54, 0x14, 0x20}}
+			e.Frame(gtx.Ops)
+		}
 	}
+}
 
-	appWindow.app.SetUITextPalette(uiTextPalette)
+func fill(gtx *layout.Context, col color.RGBA) {
+	cs := gtx.Constraints
+	d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
+	dr := f32.Rectangle{
+		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
+	}
+	paint.ColorOp{Color: col}.Add(gtx.Ops)
+	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
+	gtx.Dimensions = layout.Dimensions{Size: d}
 }
