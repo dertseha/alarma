@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// Instance is the master configuration for the whole alarma application.
+// Instance is the main configuration for the whole alarma application.
 type Instance struct {
 	// TimeSpansActive is set to true if time-span related actions are to be performed.
 	// If false, it is treated as if all TimeSpan entries were disabled.
