@@ -22,9 +22,8 @@ func (m darkTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) co
 	case theme.ColorNameForeground:
 		if m.isActive() {
 			return color.RGBA{R: 0x40, G: 0x14, B: 0x54, A: 0xFF}
-		} else {
-			return color.RGBA{R: 0x40, G: 0x54, B: 0x14, A: 0xFF}
 		}
+		return color.RGBA{R: 0x40, G: 0x54, B: 0x14, A: 0xFF}
 	}
 	return theme.DefaultTheme().Color(name, variant)
 }

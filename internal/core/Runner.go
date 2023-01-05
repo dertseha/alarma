@@ -12,7 +12,7 @@ type Runner struct {
 	activeTasks map[string]*Task
 }
 
-// NewRunner starts a new runner instance
+// NewRunner starts a new runner instance.
 func NewRunner() *Runner {
 	rand.Seed(time.Now().UnixNano())
 
